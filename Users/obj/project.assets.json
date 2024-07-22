@@ -8438,11 +8438,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Asus\\Downloads\\Users\\Users\\Users\\Users.csproj",
+      "projectUniqueName": "C:\\Users\\Asus\\Downloads\\NewFolder\\Live-Chat-Support\\Users\\Users.csproj",
       "projectName": "Users",
-      "projectPath": "C:\\Users\\Asus\\Downloads\\Users\\Users\\Users\\Users.csproj",
+      "projectPath": "C:\\Users\\Asus\\Downloads\\NewFolder\\Live-Chat-Support\\Users\\Users.csproj",
       "packagesPath": "C:\\Users\\Asus\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Asus\\Downloads\\Users\\Users\\Users\\obj\\",
+      "outputPath": "C:\\Users\\Asus\\Downloads\\NewFolder\\Live-Chat-Support\\Users\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Asus\\AppData\\Roaming\\NuGet\\NuGet.Config",

@@ -63,7 +63,7 @@ namespace Users.Controllers
             return View();
         }
         [HttpPost]
-        public IActionResult Register(User users)
+        public async Task<IActionResult> Register(User users)
         {
             if (users == null)
             {
@@ -85,35 +85,35 @@ namespace Users.Controllers
             string hashPass = BCrypt.Net.BCrypt.HashPassword(users.Password);
             users.Password = hashPass;
 
-            if (_context.Users.Count() == 0)
-            {
-                _context.Users.Add(users);
-                _context.SaveChanges();
+            _context.Users.Add(users);
+            _context.SaveChanges();
 
-                var userRole = new UserRoles
-                {
-                    UserId = users.Id,
-                    Role = "SupportAgent"
-                };
-                _context.UserRoles.Add(userRole);
-            }
-            else
+            var userRole = new UserRoles
             {
-                _context.Users.Add(users);
-                _context.SaveChanges();
-
-                var userRole = new UserRoles
-                {
-                    UserId = users.Id,
-                    Role = "User"
-                };
-                _context.UserRoles.Add(userRole);
-            }
+                UserId = users.Id,
+                Role = _context.Users.Count() == 1 ? "SupportAgent" : "User"
+            };
+            _context.UserRoles.Add(userRole);
 
             _context.SaveChanges();
 
+            if (userRole.Role == "User")
+            {
+                var supportAgent = _context.Users.FirstOrDefault(u => _context.UserRoles.Any(r => r.UserId == u.Id && r.Role == "SupportAgent"));
+                if (supportAgent != null)
+                {
+                    // Create group name using user and support agent IDs or emails
+                    string groupName = $"Group_{users.Id}_{supportAgent.Id}";
+
+                    // Notify SignalR to join group
+                    await _hubContext.Clients.User(users.Email).SendAsync("JoinGroup", groupName);
+                    await _hubContext.Clients.User(supportAgent.Email).SendAsync("JoinGroup", groupName);
+                }
+            }
+
             return RedirectToAction("Index", "Login");
         }
+
 
         [HttpGet("/api/GetCurrentUserName")]
         public IActionResult GetCurrentUserName()

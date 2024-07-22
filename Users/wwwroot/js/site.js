@@ -27,3 +27,27 @@ $(document).ready(function () {
         }
     });
 });
+connection.start().then(function () {
+    console.log("SignalR connected");
+}).catch(function (err) {
+    return console.error(err.toString());
+});
+
+connection.on("JoinGroup", function (groupName) {
+    connection.invoke("JoinGroup", groupName).catch(function (err) {
+        return console.error(err.toString());
+    });
+});
+
+connection.on("ReceiveMessage", function (fromUser, message) {
+    // Handle receiving messages
+});
+document.getElementById("sendButton").addEventListener("click", function (event) {
+    const message = document.getElementById("messageInput").value;
+    const groupName = /* Logic to get the current group name */;
+    connection.invoke("SendMessage", currentUser, groupName, message).catch(function (err) {
+        return console.error(err.toString());
+    });
+    event.preventDefault();
+});
+

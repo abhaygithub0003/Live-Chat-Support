@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "R9Q8is2CfEhh/luaUdTWWjWPJK+B4tCGEVDPkfYlLMvzgbLrceYxMQkaIX179TrVAAydIn98Y+qY4+tOZK6XFg==",
+  "dgSpecHash": "datGARaiHnTI3w+BHvgbXWsk/xvfL51++ZiDd7eLJoCHtVFCnIYvhFSZLtlM1hcyty7sS82MDWJ1t32YlUxRkA==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Asus\\Downloads\\Users\\Users\\Users\\Users.csproj",
+  "projectFilePath": "C:\\Users\\Asus\\Downloads\\NewFolder\\Live-Chat-Support\\Users\\Users.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Asus\\.nuget\\packages\\azure.core\\1.35.0\\azure.core.1.35.0.nupkg.sha512",
     "C:\\Users\\Asus\\.nuget\\packages\\azure.identity\\1.10.3\\azure.identity.1.10.3.nupkg.sha512",

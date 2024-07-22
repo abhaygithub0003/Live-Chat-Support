@@ -22,5 +22,6 @@ namespace Users.Models
         public string Country { get; set; }
         [Required]
         public string Password { get; set; }
+        public ICollection<UserRoles> UserRoles { get; set; }
     }
 }
