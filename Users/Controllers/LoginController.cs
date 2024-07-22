@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Users.Data;
 using Users.Models;
-using Users.Models.ViewModels;
+using Users.Models.ViewModels; // Ensure this namespace is included
 
 namespace Users.Controllers
 {
@@ -14,28 +14,40 @@ namespace Users.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IHubContext<ChatHub> _hubContext;
+
         public LoginController(ApplicationDbContext context, IHubContext<ChatHub> hubContext)
         {
             _context = context;
             _hubContext = hubContext;
         }
+
         public IActionResult Index()
         {
             return View();
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(LoginViewodel model)
+        public async Task<IActionResult> Index(LoginViewModel model) // Correct type
         {
             if (ModelState.IsValid)
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+                var user = await _context.Users
+                    .Include(u => u.UserRoles)
+                    .FirstOrDefaultAsync(u => u.Email == model.Email);
+
                 if (user != null && BCrypt.Net.BCrypt.Verify(model.Password, user.Password))
                 {
                     var claims = new List<Claim>
-                        {
-                            new Claim(ClaimTypes.Name, user.Email)
-                        };
+                    {
+                        new Claim(ClaimTypes.Name, user.Email),
+                    };
+
+                    foreach (var role in user.UserRoles)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role.Role));
+                    }
+
                     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                     var principal = new ClaimsPrincipal(identity);
 
@@ -46,10 +58,12 @@ namespace Users.Controllers
 
                     return RedirectToAction("Index", "Home");
                 }
+
                 ModelState.AddModelError(string.Empty, "Invalid email or password. Please try again.");
             }
             return View(model);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
@@ -58,14 +72,17 @@ namespace Users.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
         public IActionResult Register()
         {
             return View();
         }
+
         [HttpPost]
-        public async Task<IActionResult> Register(User users)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(User user)
         {
-            if (users == null)
+            if (user == null)
             {
                 return NotFound();
             }
@@ -75,45 +92,43 @@ namespace Users.Controllers
                 return BadRequest(ModelState);
             }
 
-            var emailExists = _context.Users.FirstOrDefault(u => u.Email == users.Email);
+            var emailExists = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (emailExists != null)
             {
                 ModelState.AddModelError("Email", "Email already exists");
                 return View(new User());
             }
 
-            string hashPass = BCrypt.Net.BCrypt.HashPassword(users.Password);
-            users.Password = hashPass;
+            string hashPass = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            user.Password = hashPass;
 
-            _context.Users.Add(users);
-            _context.SaveChanges();
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
 
             var userRole = new UserRoles
             {
-                UserId = users.Id,
+                UserId = user.Id,
                 Role = _context.Users.Count() == 1 ? "SupportAgent" : "User"
             };
             _context.UserRoles.Add(userRole);
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             if (userRole.Role == "User")
             {
-                var supportAgent = _context.Users.FirstOrDefault(u => _context.UserRoles.Any(r => r.UserId == u.Id && r.Role == "SupportAgent"));
+                var supportAgent = await _context.Users
+                    .FirstOrDefaultAsync(u => _context.UserRoles.Any(r => r.UserId == u.Id && r.Role == "SupportAgent"));
+
                 if (supportAgent != null)
                 {
-                    // Create group name using user and support agent IDs or emails
-                    string groupName = $"Group_{users.Id}_{supportAgent.Id}";
-
-                    // Notify SignalR to join group
-                    await _hubContext.Clients.User(users.Email).SendAsync("JoinGroup", groupName);
+                    string groupName = $"Group_{user.Id}_{supportAgent.Id}";
+                    await _hubContext.Clients.User(user.Email).SendAsync("JoinGroup", groupName);
                     await _hubContext.Clients.User(supportAgent.Email).SendAsync("JoinGroup", groupName);
                 }
             }
 
             return RedirectToAction("Index", "Login");
         }
-
 
         [HttpGet("/api/GetCurrentUserName")]
         public IActionResult GetCurrentUserName()
@@ -131,8 +146,9 @@ namespace Users.Controllers
                 return NotFound();
             }
 
-            return Ok(user.FirstName); 
+            return Ok(user.FirstName);
         }
+
         [HttpGet("/api/GetCurrentUserId")]
         public IActionResult GetCurrentUserId()
         {
@@ -151,7 +167,5 @@ namespace Users.Controllers
 
             return Ok(user.Id);
         }
-
-
     }
 }
