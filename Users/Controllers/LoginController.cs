@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Users.Data;
 using Users.Models;
-using Users.Models.ViewModels; // Ensure this namespace is included
+using Users.Models.ViewModels;
 
 namespace Users.Controllers
 {
@@ -28,7 +28,7 @@ namespace Users.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(LoginViewModel model) // Correct type
+        public async Task<IActionResult> Index(LoginViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -55,6 +55,14 @@ namespace Users.Controllers
                     {
                         ExpiresUtc = DateTime.UtcNow + TimeSpan.FromMinutes(30)
                     });
+
+                    var supportAgent = await _context.Users
+                        .FirstOrDefaultAsync(u => _context.UserRoles.Any(r => r.UserId == u.Id && r.Role == "SupportAgent"));
+
+                    if (supportAgent != null)
+                    {
+                        return RedirectToAction("Index", "Home", new { userEmail = supportAgent.Email });
+                    }
 
                     return RedirectToAction("Index", "Home");
                 }

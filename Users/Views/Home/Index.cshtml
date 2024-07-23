@@ -1,5 +1,8 @@
-﻿@{
+﻿@model Users.Models.User
+
+@{
     var chatUser = ViewBag.ChatUser as Users.Models.User;
+    var messages = ViewBag.Messages as List<Users.Models.ChatMessage>;
 }
 
 <!DOCTYPE html>
@@ -35,7 +38,17 @@
 <body>
     <h2>Chat with @chatUser?.FirstName @chatUser?.LastName</h2>
 
-    <div id="messagesList"></div>
+    <div id="messagesList">
+        @if (messages != null)
+        {
+            foreach (var msg in messages)
+            {
+                <div class="message @(msg.FromUser == User.Identity.Name ? "sent" : "received")">
+                    @msg.FromUser: @msg.Message
+                </div>
+            }
+        }
+    </div>
     <input type="text" id="messageInput" />
     <button id="sendButton">Send</button>
 
@@ -45,9 +58,7 @@
         const chatUserEmail = '@chatUser?.Email';
 
         connection.start().then(function () {
-            console.log("SignalR connected");
-
-            // Join group
+            console.log("SignalR connected");           
             if (chatUserEmail) {
                 connection.invoke("JoinGroup", currentUserEmail, chatUserEmail).catch(function (err) {
                     return console.error(err.toString());
