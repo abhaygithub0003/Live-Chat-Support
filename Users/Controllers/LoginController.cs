@@ -95,10 +95,10 @@ namespace Users.Controllers
                 return NotFound();
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return BadRequest(ModelState);
+            //}
 
             var emailExists = await _context.Users.FirstOrDefaultAsync(u => u.Email == user.Email);
             if (emailExists != null)
